@@ -1,0 +1,249 @@
+<html>
+
+<canvas id="gameCanvas" width="1200" height="600" style="border:20px solid #ffffff;"> </canvas>
+
+
+
+	<!--  Loader Plugin    -->
+    <!--   Core JS Files   -->
+    <script src="jquery-1.10.2.js" type="text/javascript"></script>
+	<!--  Loader Plugin    -->
+    <script src="loader.js"></script>
+
+<script>
+
+var canvas;
+var canvasContext;
+var ballX=50;
+var ballSpeedX=8;
+var ballY=50;
+var ballSpeedY=8;
+var paddle1Y=250;
+var paddle2Y=250;
+const PADDLE_HEIGHT=100;//C convention ie const var must be in blocks
+const PADDLE_THICKNESS=10;//C convention ie const var must be in blocks
+var player1Score=0;
+var player2Score=0;
+var WINNING_SCORE=5;
+var showingWinScreen=false;
+
+
+
+
+function calMousePos(evt)
+{
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement
+	var mouseX = evt.clientX-rect.left-root.scrollLeft; 
+	var mouseY = evt.clientY-rect.top-root.scrollTop;
+
+	return {
+		x:mouseX,
+		y:mouseY
+			};
+}
+
+
+function handleMouseClick(evt)
+{
+	if(showingWinScreen)
+	{
+		player1Score=0;
+		player2Score=0;
+		showingWinScreen = false;
+	}
+}
+
+
+					
+
+
+window.onload=function()
+{
+	canvas = document.getElementById('gameCanvas');
+
+
+
+	
+
+
+
+
+	
+	canvasContext = canvas.getContext('2d');
+	var framesPerSec=30;
+	setInterval(function(){		// it is nothing but inline functiion call
+		moveEverything();
+		drawEverything();
+	},1000/framesPerSec);
+	
+	canvas.addEventListener('mousedown',handleMouseClick)
+	canvas.addEventListener('mousemove',
+	function(evt) {
+		var mousePos = calMousePos(evt);
+		paddle1Y=mousePos.y-(PADDLE_HEIGHT/2);
+	});
+
+}
+
+
+//function callBoth()
+//{		in this we were calling two functions but due to complexity we used inline function call 
+	
+//}
+
+
+function ballReset()
+{
+	if(player1Score>=WINNING_SCORE || player2Score >= WINNING_SCORE)
+	{
+
+		showingWinScreen=true;
+	}
+	ballSpeedX = -ballSpeedX;
+	ballX=canvas.width/2;
+	ballY=canvas.height/2;
+}
+
+function computerMovement()
+{
+	var paddle2YCenter = paddle2Y+(PADDLE_HEIGHT/2);
+	if(paddle2YCenter<ballY-35)
+	{
+		paddle2Y+=8;
+	}
+
+	else if (paddle2YCenter>ballY+35){
+		paddle2Y-=8;
+	}
+
+}
+
+function moveEverything()
+{
+
+	if(showingWinScreen)
+	{
+		return 
+	}
+
+	computerMovement();
+	ballX+=ballSpeedX;// we have just seperated the movement code area  to draw code area . Every time ballx value is increasing
+	//f
+	if(ballX >canvas.width)
+	{
+		if(ballY>paddle2Y && ballY <paddle2Y+PADDLE_HEIGHT)//checking that ball is hitting paddle or not , paddle1Y is the top position of paddle and paddle1Y+PADDLE_HEIGHT is the last position of paddle.
+		{
+			ballSpeedX = -ballSpeedX;
+			var deltaY = ballY - (paddle1Y+PADDLE_HEIGHT/2);
+			ballSpeedY = deltaY*0.08;
+		}
+		else
+		{
+		player1Score++;
+		ballReset();
+		//ballSpeedX = -(ballSpeedX);
+		}
+		
+	}
+
+	if(ballX < 0)
+	{
+		if(ballY>paddle1Y && ballY <paddle1Y+PADDLE_HEIGHT)//checking that ball is hitting paddle or not , paddle1Y is the top position of paddle and paddle1Y+PADDLE_HEIGHT is the last position of paddle.
+		{
+			ballSpeedX = -ballSpeedX;
+			var deltaY = ballY - (paddle2Y+PADDLE_HEIGHT/2);
+			ballSpeedY = deltaY*0.08;
+		}
+		else
+		{
+		player2Score++;
+		ballReset();
+		
+		//ballSpeedX = -(ballSpeedX)
+	 	}
+	}
+
+ //movement of ball in Y direction
+	ballY+=ballSpeedY;
+	
+	if(ballY >canvas.height)
+	{
+		ballSpeedY = -ballSpeedY;
+	}
+
+	if(ballY < 0)
+	{
+		ballSpeedY = -(ballSpeedY);
+	}
+}
+function drawNet()
+{
+	for(var i=0;i<canvas.height;i+=40)
+		colorRect(canvas.width/2-1,i,2,20,'white');
+}
+function drawEverything()
+{
+
+	//moveEverything();
+	console.log(ballX);
+	colorRect(0,0,canvas.width,canvas.height,'black');
+//first two 0s are starting point then two are size of canvas
+//drawing left paddle
+	if(showingWinScreen)
+	{
+
+
+		if(player1Score>=WINNING_SCORE)
+		{
+			canvasContext.fillStyle ="#FF0000";
+		canvasContext.fillText("Player 1 Wins !!! " ,200,200 );
+		}
+		else if( player2Score >= WINNING_SCORE)
+		{
+			canvasContext.fillStyle ="#FF0000";
+		canvasContext.fillText("Computer Wins XD " ,200,200 );
+
+		}
+
+		canvasContext.fillStyle ="#FF0000";
+		canvasContext.fillText("CLick to Continue !!! " ,350,400 );
+		return 
+	}
+	drawNet();
+
+	colorRect(0,paddle1Y,PADDLE_THICKNESS,PADDLE_HEIGHT,'red');
+	
+//drawing right paddle
+	colorRect(canvas.width-PADDLE_THICKNESS,paddle2Y,PADDLE_THICKNESS,PADDLE_HEIGHT,'red');
+
+	//drawing Ball
+	colorCircle(ballX,ballY,10,'white')
+
+	function colorCircle(centerX,centerY,radius,drawColor)
+	{
+	canvasContext.fillStyle = drawColor;
+	canvasContext.beginPath();
+	canvasContext.arc(centerX,centerY,radius,0,Math.PI*2,true);//there is no circle function in js , there are few arguments first two are x,y position(center of circle) next arg is radius next two are angles (in radian)(2*PI is 360),last if true as we want that portion colored which is driven by the radius.
+
+	canvasContext.fill();
+
+	}
+	
+	canvasContext.fillText(player1Score,100,100);
+	canvasContext.fillText(player2Score,canvas.width-100,100);
+}
+
+
+function colorRect(leftX,topY,width,height,drawColor)
+{
+	canvasContext.fillStyle = drawColor;
+	canvasContext.fillRect(leftX,topY,width,height);
+}
+
+
+
+
+</script>
+
+</html>
